@@ -23,10 +23,10 @@ def get_main_page(date_str: str):
 
     greeting = get_greeting(date)
     user_settings = get_user_settings()
-
+    df = load_operations()
     # Здесь предполагаем, что операции хранятся в Excel
-    cards_info = analyze_cards(start_date, end_date)
-    top_transactions = get_top_transactions(start_date, end_date)
+    cards_info = analyze_cards(df, start_date, end_date)
+    top_transactions = get_top_transactions(df, start_date, end_date)
     currencies = get_currency_rates(user_settings["user_currencies"])
     stocks = get_stock_prices(user_settings["user_stocks"])
 
@@ -46,8 +46,8 @@ def get_events_page(date_str: str, range_type: str = "M"):
 
     df = load_operations()
 
-    expenses = analyze_expenses(start_date, end_date, df)
-    incomes = analyze_incomes(start_date, end_date, df)
+    expenses = analyze_expenses(df, start_date, end_date)
+    incomes = analyze_incomes(df, start_date, end_date)
 
     currencies = {cur: 0.0 for cur in user_settings["user_currencies"]}
     stocks = {stock: 0.0 for stock in user_settings["user_stocks"]}

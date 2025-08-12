@@ -1,10 +1,17 @@
+import os
+
 import pandas as pd
 
-def load_operations(path="data/operations.xlsx") -> pd.DataFrame:
-    df = pd.read_excel(path, parse_dates=["Дата операции"])
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def load_operations() -> pd.DataFrame:
+    path = os.path.join(BASE_DIR, "data", "operations.xlsx")
+    df = pd.read_excel(path)
+    df["Дата операции"] = pd.to_datetime(df["Дата операции"], dayfirst=True)
     df.rename(columns={
         "Дата операции": "date",
         "Номер карты": "card_number",
+
         "Сумма операции": "amount",
         "Кэшбэк": "cashback",
         "Категория": "category",
@@ -18,6 +25,9 @@ def load_operations(path="data/operations.xlsx") -> pd.DataFrame:
     return df
 
 def analyze_cards(df: pd.DataFrame, start_date, end_date):
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Ожидался DataFrame, а не datetime")
+
     df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
     cards = []
     for card, sub in df_range.groupby("card_last4"):

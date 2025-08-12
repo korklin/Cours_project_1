@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import json
 import os
 import calendar
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def parse_date(date_str: str) -> datetime:
     return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
@@ -34,6 +36,10 @@ def get_greeting(date: datetime):
     else:
         return "Доброй ночи"
 
-def get_user_settings():
-    with open("user_settings.json", encoding='utf-8') as f:
+def get_user_settings(path=None):
+    if path is None:
+        path = os.path.join(BASE_DIR, "user_settings.json")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Настройки не найдены: {path}")
+    with open(path, encoding='utf-8') as f:
         return json.load(f)
