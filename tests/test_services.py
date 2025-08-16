@@ -1,71 +1,61 @@
 import pathlib
-
+import json
 import pandas as pd
 import pytest
 from src import services
+from src.utils import normalize_transactions
 
 
 @pytest.fixture(scope="module")
 def data():
-    """
-    Фикстура для загрузки Excel с транзакциями.
-    Используется во всех тестах.
-    """
-    # Находим путь к папке data
     root_dir = pathlib.Path(__file__).resolve().parents[1]
     path = root_dir / "data" / "operations.xlsx"
 
     if not path.exists():
         raise FileNotFoundError(f"Файл не найден: {path}")
 
-    return pd.read_excel(path)
+    df = pd.read_excel(path)
+    return normalize_transactions(df)
 
 
 def test_cashback_analysis(data):
-    """
-    Тест анализа выгодных категорий кешбэка.
-    Проверяем, что результат — это строка в формате JSON
-    и что в нём есть хотя бы одна категория.
-    """
     result = services.cashback_analysis(data, 2021, 12)
+    parsed = json.loads(result)
+
     assert isinstance(result, str)
-    assert "Супермаркеты" in result or "Различные товары" in result
+    assert isinstance(parsed, dict)
+    assert len(parsed) > 0
 
 
 def test_investment_bank(data):
-    """
-    Тест расчёта инвесткопилки.
-    Проверяем, что сумма округлений за месяц считается корректно.
-    """
     result = services.investment_bank("2021-12", data, 50)
     assert isinstance(result, float)
     assert result >= 0
 
 
 def test_simple_search(data):
-    """
-    Тест простого поиска по описанию.
-    Проверяем, что при поиске по слову 'Пятерочка'
-    возвращаются транзакции с этим магазином.
-    """
     result = services.simple_search("Супермаркет", data)
+    parsed = json.loads(result)
+
     assert isinstance(result, str)
-    assert "Супермаркет" in result
+    assert isinstance(parsed, list)
+    assert any("Супермаркет" in tx.get("Описание", "") or "Супермаркет" in tx.get("Категория", "")
+               for tx in parsed)
 
 
 def test_search_phone_numbers(data):
-    """
-    Тест поиска транзакций с телефонными номерами.
-    Проверяем, что поиск возвращает JSON и работает без ошибок.
-    """
     result = services.search_phone_numbers(data)
+    parsed = json.loads(result)
+
     assert isinstance(result, str)
+    assert isinstance(parsed, list)
 
 
 def test_search_person_transfers(data):
-    """
-    Тест поиска переводов физическим лицам.
-    Проверяем, что результат — JSON и что транзакции действительно относятся к переводам.
-    """
     result = services.search_person_transfers(data)
+    parsed = json.loads(result)
+
     assert isinstance(result, str)
+    assert isinstance(parsed, list)
+    assert all("Перевод" in tx.get("Категория", "") or "перевод" in tx.get("Описание", "").lower()
+               for tx in parsed)

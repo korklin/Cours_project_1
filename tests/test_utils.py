@@ -1,24 +1,31 @@
-import pytest
-from datetime import datetime
-from src.utils import parse_date, get_date_range, get_greeting
+import pandas as pd
+from src.utils import prepare_events
 
-def test_parse_date():
-    assert parse_date("2025-08-12 14:30:00") == datetime(2025, 8, 12, 14, 30, 0)
 
-def test_get_date_range_month():
-    date = datetime(2025, 8, 12)
-    start, end = get_date_range(date, "M")
-    assert start == datetime(2025, 8, 1)
-    assert end == date
+def test_prepare_events_returns_expected_format():
+    df = pd.DataFrame(
+        [
+            {
+                "Дата операции": "2021-12-21 10:00:00",
+                "Сумма операции": -500,
+                "Категория": "Еда",
+                "Описание": "Покупка в магазине",
+            },
+            {
+                "Дата операции": "2021-12-22 15:30:00",
+                "Сумма операции": -1200,
+                "Категория": "Транспорт",
+                "Описание": "Такси",
+            },
+        ]
+    )
 
-def test_get_date_range_week():
-    date = datetime(2025, 8, 7)  # Четверг
-    start, end = get_date_range(date, "W")
-    assert start == datetime(2025, 8, 4)  # Понедельник
-    assert end == date
+    events = prepare_events(df)
 
-def test_get_greeting():
-    assert get_greeting(datetime(2025, 8, 12, 8, 0, 0)) == "Доброе утро"
-    assert get_greeting(datetime(2025, 8, 12, 13, 0, 0)) == "Добрый день"
-    assert get_greeting(datetime(2025, 8, 12, 19, 0, 0)) == "Добрый вечер"
-    assert get_greeting(datetime(2025, 8, 12, 3, 0, 0)) == "Доброй ночи"
+    assert isinstance(events, list)
+    assert all(isinstance(e, dict) for e in events)
+    assert events[0]["дата"] == "21.12.2021 10:00:00"
+    assert events[0]["сумма"] == -500
+    assert events[0]["категория"] == "Еда"
+    assert events[0]["описание"] == "Покупка в магазине"
+    assert events[1]["категория"] == "Транспорт"

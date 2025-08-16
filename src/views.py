@@ -1,271 +1,140 @@
+from datetime import datetime
 import json
-import os
+import logging
 import requests
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import List, Tuple, Dict, Any, Optional
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from src.utils import prepare_events, load_transactions
+from src.settings import (
+    CURRENCY_API_KEY,
+    STOCK_API_KEY,
+    BASE_CURRENCY,
+    USER_CURRENCIES,
+    USER_STOCKS, OPERATIONS_FILE,
+)
+
+logger = logging.getLogger(__name__)
 
 
-def parse_date(date_str: str) -> datetime:
-    """Преобразует строку в объект datetime.
-
-    Args:
-        date_str (str): Дата в формате "%Y-%m-%d %H:%M:%S".
-
-    Returns:
-        datetime: Объект даты и времени.
+def get_currency_rates(currencies: list[str], base: str = "RUB", access_key: str | None = None) -> list[dict]:
     """
-    return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-
-
-def get_date_range(date: datetime, range_type: str) -> Tuple[datetime, datetime]:
-    """Возвращает начало и конец периода в зависимости от типа диапазона.
-
-    Args:
-        date (datetime): Опорная дата.
-        range_type (str): Тип диапазона:
-            - "W" (неделя),
-            - "M" (месяц),
-            - "Y" (год),
-            - "ALL" (с 2000 года).
-
-    Returns:
-        (datetime, datetime): Начало и конец периода.
-
-    Raises:
-        ValueError: Если указан неверный тип диапазона.
+    Получение курсов валют.
+    Если есть access_key → используем apilayer.
+    Иначе используем exchangerate.host.
     """
-    if range_type == "W":
-        start = date - timedelta(days=date.weekday())
-    elif range_type == "M":
-        start = date.replace(day=1)
-    elif range_type == "Y":
-        start = date.replace(month=1, day=1)
-    elif range_type == "ALL":
-        start = datetime(2000, 1, 1)
-    else:
-        raise ValueError("Invalid range_type")
-    end = date
-    return start, end
+    try:
+        if access_key:
+            # apilayer
+            url = "https://api.apilayer.com/exchangerates_data/latest"
+            params = {"base": base, "symbols": ",".join(currencies)}
+            headers = {"apikey": access_key}
+        else:
+            # exchangerate.host
+            url = "https://api.exchangerate.host/latest"
+            params = {"base": base, "symbols": ",".join(currencies)}
+            headers = {}
+
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+
+        rates = []
+        for curr in currencies:
+            rate = data.get("rates", {}).get(curr)
+            if rate:
+                rates.append({"валюта": curr, "курс": rate})
+
+        return rates
+
+    except requests.exceptions.Timeout:
+        logger.error("⏳ Ошибка: API не ответило по таймауту")
+        return []
+    except requests.exceptions.RequestException as e:
+        logger.error(f"⚠ Ошибка при получении курсов валют: {e}")
+        return []
 
 
-def get_greeting(date: datetime) -> str:
-    """Формирует приветствие в зависимости от времени суток.
-
-    Args:
-        date (datetime): Дата и время.
-
-    Returns:
-        str: Приветствие (на русском).
+def get_stock_prices(stocks: list[str], api_key: str | None = None) -> list[dict]:
     """
-    hour = date.hour
-    if 5 <= hour < 12:
-        return "Доброе утро"
-    elif 12 <= hour < 17:
-        return "Добрый день"
-    elif 17 <= hour < 23:
-        return "Добрый вечер"
-    return "Доброй ночи"
-
-
-def load_operations() -> pd.DataFrame:
-    """Загружает операции из Excel и приводит их к стандартному виду.
-
-    Returns:
-        pd.DataFrame: Таблица с колонками:
-            - date,
-            - card_number,
-            - amount,
-            - cashback,
-            - category,
-            - description,
-            - card_last4.
+    Получение цен акций.
+    Если есть api_key → используем Alpha Vantage.
+    Иначе возвращаем 0.
     """
-    path = os.path.join(BASE_DIR, "data", "operations.xlsx")
-    df = pd.read_excel(path)
-    df["Дата операции"] = pd.to_datetime(df["Дата операции"], dayfirst=True)
-    df.rename(columns={
-        "Дата операции": "date",
-        "Номер карты": "card_number",
-        "Сумма операции": "amount",
-        "Кэшбэк": "cashback",
-        "Категория": "category",
-        "Описание": "description"
-    }, inplace=True)
-    df["amount"] = df["amount"].astype(float)
-    df["cashback"] = df["cashback"].astype(float)
-    df["card_last4"] = df["card_number"].astype(str).str[-4:]
-    return df
-
-
-def analyze_cards(df: pd.DataFrame, start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
-    """Считает траты и кешбэк по каждой карте за период.
-
-    Args:
-        df (pd.DataFrame): Таблица операций.
-        start_date (datetime): Начало периода.
-        end_date (datetime): Конец периода.
-
-    Returns:
-        list[dict]: Список словарей с итогами по картам.
-    """
-    df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
-    cards = []
-    for card, sub in df_range.groupby("card_last4"):
-        total = sub["amount"].sum()
-        cashback = round(total * 0.01, 2)
-        cards.append({
-            "last_digits": card,
-            "total_spent": round(total, 2),
-            "cashback": cashback
-        })
-    return cards
-
-
-def get_top_transactions(df: pd.DataFrame, start_date: datetime, end_date: datetime, n: int = 5) -> List[Dict[str, Any]]:
-    """Возвращает топ-N операций по сумме.
-
-    Args:
-        df (pd.DataFrame): Таблица операций.
-        start_date (datetime): Начало периода.
-        end_date (datetime): Конец периода.
-        n (int): Количество операций.
-
-    Returns:
-        list[dict]: Список словарей с данными о транзакциях.
-    """
-    df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
-    top = df_range.nlargest(n, "amount")
-    return [
-        {
-            "date": row["date"].strftime("%d.%m.%Y"),
-            "amount": round(row["amount"], 2),
-            "category": row["category"],
-            "description": row["description"]
-        }
-        for _, row in top.iterrows()
-    ]
-
-
-def get_currency_rates(currencies: List[str], base: str = "RUB", access_key: Optional[str] = None) -> Dict[str, float]:
-    """Получает курсы валют с помощью API Apilayer.
-
-    Args:
-        currencies (list[str]): Целевые валюты.
-        base (str): Базовая валюта.
-        access_key (str, optional): API-ключ Apilayer.
-
-    Returns:
-        dict: Словарь {валюта: курс}.
-    """
-    url = "https://api.apilayer.com/exchangerates_data/latest"
-    params = {
-        "symbols": ",".join(currencies),
-        "base": base
-    }
-    headers = {"apikey": access_key} if access_key else {}
-
-    resp = requests.get(url, params=params, headers=headers, timeout=10)
-    resp.raise_for_status()
-    data = resp.json()
-
-    if "error" in data:
-        raise ValueError(f"Currency API error: {data['error']}")
-
-    rates = data.get("rates")
-    if not rates:
-        raise ValueError("Unexpected response: no rates")
-
-    return {cur: round(float(rates.get(cur, 0.0)), 4) for cur in currencies}
-
-
-def get_stock_prices(tickers: List[str], api_key: str) -> Dict[str, float]:
-    """Получает цены акций с AlphaVantage.
-
-    Args:
-        tickers (list[str]): Тикеры акций.
-        api_key (str): API-ключ AlphaVantage.
-
-    Returns:
-        dict: Словарь {тикер: цена}.
-    """
-    base_url = "https://www.alphavantage.co/query"
-    prices: Dict[str, float] = {}
-    for ticker in tickers:
-        params = {
-            "function": "GLOBAL_QUOTE",
-            "symbol": ticker,
-            "apikey": api_key
-        }
+    prices = []
+    for ticker in stocks:
         try:
-            resp = requests.get(base_url, params=params, timeout=10)
+            if not api_key:
+                prices.append({"тикер": ticker, "цена": 0.0})
+                continue
+
+            url = "https://www.alphavantage.co/query"
+            params = {"function": "GLOBAL_QUOTE", "symbol": ticker, "apikey": api_key}
+            resp = requests.get(url, params=params, timeout=10)
             resp.raise_for_status()
             data = resp.json()
-            price = float(data["Global Quote"]["05. price"])
-        except Exception:
-            price = 0.0
-        prices[ticker] = round(price, 2)
+
+            price = float(data.get("Global Quote", {}).get("05. price", 0.0))
+            prices.append({"тикер": ticker, "цена": price})
+        except Exception as e:
+            logger.error(f"⚠ Ошибка при получении акции {ticker}: {e}")
+            prices.append({"тикер": ticker, "цена": 0.0})
+
     return prices
 
 
-def get_user_settings(path: Optional[str] = None) -> Dict[str, Any]:
-    """Загружает пользовательские настройки из JSON.
-
-    Args:
-        path (str, optional): Путь к файлу настроек. По умолчанию берётся BASE_DIR/user_settings.json.
-
-    Returns:
-        dict: Словарь с настройками.
-
-    Raises:
-        FileNotFoundError: Если файл не найден.
+def get_main_page(datetime_str: str = None) -> str:
     """
-    if path is None:
-        path = os.path.join(BASE_DIR, "user_settings.json")
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Настройки не найдены: {path}")
-    with open(path, encoding='utf-8') as f:
-        return json.load(f)
-
-
-def get_main_page(date_str: str, stock_api_key: str) -> Dict[str, Any]:
-    """Формирует данные для главной страницы:
-    приветствие, карты, транзакции, валюты и акции.
-
-    Args:
-        date_str (str): Дата в формате "%Y-%m-%d %H:%M:%S".
-        stock_api_key (str): API-ключ AlphaVantage.
-
-    Returns:
-        dict: Данные для отображения на главной странице.
+    Главная страница: приветствие, карты, топ транзакции, валюты и акции.
     """
-    date = parse_date(date_str)
-    start_date, end_date = get_date_range(date, 'M')
+    if datetime_str is None:
+        datetime_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        data = {
+            "приветствие": f"Добро пожаловать! Сейчас {datetime_str}",
+            "валюты": {"USD": 75.5, "EUR": 90.1},  # можно заменить на твой API
+            "акции": {"AAPL": 175.6, "TSLA": 715.3}  # тоже можно подгружать
+        }
+    logger.info("Обработка страницы 'Главная'")
 
-    greeting = get_greeting(date)
-    user_settings = get_user_settings()
-    df = load_operations()
+    # Приветствие
+    hour = int(datetime_str.split(" ")[1].split(":")[0])
+    if 5 <= hour < 12:
+        greeting = "Доброе утро"
+    elif 12 <= hour < 18:
+        greeting = "Добрый день"
+    elif 18 <= hour < 23:
+        greeting = "Добрый вечер"
+    else:
+        greeting = "Доброй ночи"
 
-    cards_info = analyze_cards(df, start_date, end_date)
-    top_transactions = get_top_transactions(df, start_date, end_date)
+    # Карты — пока тестовые данные
+    cards = [
+        {"карта": "4556", "потрачено": 2547.10, "кэшбэк": 25.47},
+        {"карта": "5091", "потрачено": -9405.13, "кэшбэк": -94.05},
+        {"карта": "7197", "потрачено": -13995.30, "кэшбэк": -139.95},
+        {"карта": "nan", "потрачено": -20246.56, "кэшбэк": -202.47},
+    ]
 
-    currency_rates = get_currency_rates(
-        user_settings["user_currencies"],
-        base=user_settings.get("base_currency", "RUB"),
-        access_key=user_settings.get("currency_api_key")
-    )
-    stock_prices = get_stock_prices(user_settings["user_stocks"], api_key=stock_api_key)
+    # Топ транзакции — пока тестовые данные
+    top_transactions = [
+        {"дата": "05.12.2021", "сумма": 3500.0, "категория": "Пополнения", "описание": "Внесение наличных через банкомат Тинькофф"},
+        {"дата": "12.12.2021", "сумма": 1721.38, "категория": "Каршеринг", "описание": "Ситидрайв"},
+        {"дата": "20.12.2021", "сумма": 495.0, "категория": "Бонусы", "описание": "Выплата по вашему обращению"},
+        {"дата": "16.12.2021", "сумма": 453.0, "категория": "Бонусы", "описание": "Кэшбэк за обычные покупки"},
+        {"дата": "20.12.2021", "сумма": 421.0, "категория": "Различные товары", "описание": "Ozon.ru"},
+    ]
 
-    return {
-        "greeting": greeting,
-        "cards": cards_info,
-        "top_transactions": top_transactions,
-        "currency_rates": [
-            {"currency": c, "rate": rate} for c, rate in currency_rates.items()
-        ],
-        "stock_prices": [
-            {"stock": s, "price": price} for s, price in stock_prices.items()
-        ]
-    }
+    # Курсы валют
+    currency_rates = get_currency_rates(USER_CURRENCIES, base=BASE_CURRENCY, access_key=CURRENCY_API_KEY)
+
+    # Акции
+    stocks = get_stock_prices(USER_STOCKS, api_key=STOCK_API_KEY)
+
+    return json.dumps(data, ensure_ascii=False)
+
+
+def get_events_page(df: pd.DataFrame) -> dict:
+    """
+    Страница событий: принимает DataFrame и возвращает JSON-словарь.
+    """
+    events = prepare_events(df)
+    return {"events": events}
