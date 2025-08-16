@@ -1,35 +1,65 @@
 import json
 import os
-from datetime import datetime, timedelta, time
-from typing import Any
-
-import pandas as pd
 import requests
+import pandas as pd
+from datetime import datetime, timedelta
+from typing import List, Tuple, Dict, Any, Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def parse_date(date_str: str) -> datetime:
+    """Преобразует строку в объект datetime.
+
+    Args:
+        date_str (str): Дата в формате "%Y-%m-%d %H:%M:%S".
+
+    Returns:
+        datetime: Объект даты и времени.
+    """
     return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 
-def get_date_range(date: datetime, range_type: str):
+
+def get_date_range(date: datetime, range_type: str) -> Tuple[datetime, datetime]:
+    """Возвращает начало и конец периода в зависимости от типа диапазона.
+
+    Args:
+        date (datetime): Опорная дата.
+        range_type (str): Тип диапазона:
+            - "W" (неделя),
+            - "M" (месяц),
+            - "Y" (год),
+            - "ALL" (с 2000 года).
+
+    Returns:
+        (datetime, datetime): Начало и конец периода.
+
+    Raises:
+        ValueError: Если указан неверный тип диапазона.
+    """
     if range_type == "W":
         start = date - timedelta(days=date.weekday())
-        end = date
     elif range_type == "M":
         start = date.replace(day=1)
-        end = date
     elif range_type == "Y":
         start = date.replace(month=1, day=1)
-        end = date
     elif range_type == "ALL":
-        start = datetime(2000, 1, 1)  # или earliest date
-        end = date
+        start = datetime(2000, 1, 1)
     else:
         raise ValueError("Invalid range_type")
+    end = date
     return start, end
 
-def get_greeting(date: datetime):
+
+def get_greeting(date: datetime) -> str:
+    """Формирует приветствие в зависимости от времени суток.
+
+    Args:
+        date (datetime): Дата и время.
+
+    Returns:
+        str: Приветствие (на русском).
+    """
     hour = date.hour
     if 5 <= hour < 12:
         return "Доброе утро"
@@ -37,155 +67,161 @@ def get_greeting(date: datetime):
         return "Добрый день"
     elif 17 <= hour < 23:
         return "Добрый вечер"
-    else:
-        return "Доброй ночи"
+    return "Доброй ночи"
 
 
 def load_operations() -> pd.DataFrame:
+    """Загружает операции из Excel и приводит их к стандартному виду.
+
+    Returns:
+        pd.DataFrame: Таблица с колонками:
+            - date,
+            - card_number,
+            - amount,
+            - cashback,
+            - category,
+            - description,
+            - card_last4.
+    """
     path = os.path.join(BASE_DIR, "data", "operations.xlsx")
     df = pd.read_excel(path)
     df["Дата операции"] = pd.to_datetime(df["Дата операции"], dayfirst=True)
     df.rename(columns={
         "Дата операции": "date",
         "Номер карты": "card_number",
-
         "Сумма операции": "amount",
         "Кэшбэк": "cashback",
         "Категория": "category",
         "Описание": "description"
     }, inplace=True)
-    # Приведение сумм к числовому типу
     df["amount"] = df["amount"].astype(float)
     df["cashback"] = df["cashback"].astype(float)
-    # Оформление карты: оставляем последние 4 цифры
     df["card_last4"] = df["card_number"].astype(str).str[-4:]
     return df
 
-def analyze_cards(df: pd.DataFrame, start_date, end_date):
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Ожидался DataFrame, а не datetime")
 
+def analyze_cards(df: pd.DataFrame, start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
+    """Считает траты и кешбэк по каждой карте за период.
+
+    Args:
+        df (pd.DataFrame): Таблица операций.
+        start_date (datetime): Начало периода.
+        end_date (datetime): Конец периода.
+
+    Returns:
+        list[dict]: Список словарей с итогами по картам.
+    """
     df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
     cards = []
     for card, sub in df_range.groupby("card_last4"):
         total = sub["amount"].sum()
-        cashback = total // 100  # 1 рубль на каждые 100 руб.
+        cashback = round(total * 0.01, 2)
         cards.append({
-            "card_last4": card,
+            "last_digits": card,
             "total_spent": round(total, 2),
-            "cashback": int(cashback)
+            "cashback": cashback
         })
     return cards
 
-def get_top_transactions(df: pd.DataFrame, start_date, end_date, n=5):
+
+def get_top_transactions(df: pd.DataFrame, start_date: datetime, end_date: datetime, n: int = 5) -> List[Dict[str, Any]]:
+    """Возвращает топ-N операций по сумме.
+
+    Args:
+        df (pd.DataFrame): Таблица операций.
+        start_date (datetime): Начало периода.
+        end_date (datetime): Конец периода.
+        n (int): Количество операций.
+
+    Returns:
+        list[dict]: Список словарей с данными о транзакциях.
+    """
     df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
     top = df_range.nlargest(n, "amount")
-    return top[["date", "card_last4", "amount", "category", "description"]].to_dict(orient="records")
-
-def analyze_expenses(start_date, end_date, df=None):
-    if df is None:
-        df = load_operations()
-
-    df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
-    df_exp = df_range[df_range["amount"] < 0].copy()
-
-    total_expense = -df_exp["amount"].sum()
-
-    # Категории с наибшими тратами
-    top_categories = (
-        df_exp.groupby("category")["amount"]
-        .sum()
-        .abs()
-        .sort_values(ascending=False)
-    )
-
-    top7 = top_categories[:7]
-    other = top_categories[7:].sum()
-
-    main_section = [{"category": cat, "amount": int(val)} for cat, val in top7.items()]
-    if other > 0:
-        main_section.append({"category": "Остальное", "amount": int(other)})
-
-    # Переводы и наличные
-    cash_section = df_exp[df_exp["category"].isin(["Переводы", "Наличные"])]
-    cash_summary = (
-        cash_section.groupby("category")["amount"]
-        .sum()
-        .abs()
-        .sort_values(ascending=False)
-        .reset_index()
-    )
-
-    cash_result = [
-        {"category": row["category"], "amount": int(row["amount"])}
-        for _, row in cash_summary.iterrows()
+    return [
+        {
+            "date": row["date"].strftime("%d.%m.%Y"),
+            "amount": round(row["amount"], 2),
+            "category": row["category"],
+            "description": row["description"]
+        }
+        for _, row in top.iterrows()
     ]
 
-    return {
-        "total": int(total_expense),
-        "main": main_section,
-        "cash_and_transfers": cash_result
-    }
 
+def get_currency_rates(currencies: List[str], base: str = "RUB", access_key: Optional[str] = None) -> Dict[str, float]:
+    """Получает курсы валют с помощью API Apilayer.
 
-def analyze_incomes(start_date, end_date, df=None):
-    if df is None:
-        df = load_operations()
+    Args:
+        currencies (list[str]): Целевые валюты.
+        base (str): Базовая валюта.
+        access_key (str, optional): API-ключ Apilayer.
 
-    df_range = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
-    df_inc = df_range[df_range["amount"] > 0].copy()
-
-    total_income = df_inc["amount"].sum()
-
-    grouped = (
-        df_inc.groupby("category")["amount"]
-        .sum()
-        .sort_values(ascending=False)
-        .reset_index()
-    )
-    main_section = [
-        {"category": row["category"], "amount": int(row["amount"])}
-        for _, row in grouped.iterrows()
-    ]
-
-    return {
-        "total": int(total_income),
-        "main": main_section
-    }
-
-
-def get_financial_data(currencies, stocks, access_key="fKCxXBg8fAPezuC0GlMI64lVbA4XloSU", timeout=60):
+    Returns:
+        dict: Словарь {валюта: курс}.
+    """
     url = "https://api.apilayer.com/exchangerates_data/latest"
-    headers = {"apikey": access_key}
+    params = {
+        "symbols": ",".join(currencies),
+        "base": base
+    }
+    headers = {"apikey": access_key} if access_key else {}
 
-    # Запрос для валют
-    params = {"currencies": ",".join(currencies), "stocks": ",".join(stocks)}
+    resp = requests.get(url, params=params, headers=headers, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
 
-    try:
-        resp = requests.get(url, headers=headers, params=params, timeout=60)
-        resp.raise_for_status()
-        data = resp.json()
-        print("API response:", data)  # Добавьте вывод ответа API
+    if "error" in data:
+        raise ValueError(f"Currency API error: {data['error']}")
 
-        if not data.get("success", False):
-            raise ValueError(data.get("error", {}).get("info", "Unknown error"))
+    rates = data.get("rates")
+    if not rates:
+        raise ValueError("Unexpected response: no rates")
 
-        currencies_data = {cur: round(data["rates"].get(cur, 0), 4) for cur in currencies}
-        stocks_data = {stock: round(data["stocks"].get(stock, {}).get("price", 0), 2) for stock in stocks}
-
-        return currencies_data, stocks_data
-    except requests.exceptions.Timeout:
-        print("[Financial API error] Timeout exceeded")
-        return {cur: 0.0 for cur in currencies}, {stock: 0.0 for stock in stocks}
-    except requests.exceptions.RequestException as e:
-        print(f"[Financial API error] {e}")
-        return {cur: 0.0 for cur in currencies}, {stock: 0.0 for stock in stocks}
-    except Exception as e:
-        print(f"[Financial API error] Unexpected error: {e}")
-        return {cur: 0.0 for cur in currencies}, {stock: 0.0 for stock in stocks}
+    return {cur: round(float(rates.get(cur, 0.0)), 4) for cur in currencies}
 
 
-def get_user_settings(path=None):
+def get_stock_prices(tickers: List[str], api_key: str) -> Dict[str, float]:
+    """Получает цены акций с AlphaVantage.
+
+    Args:
+        tickers (list[str]): Тикеры акций.
+        api_key (str): API-ключ AlphaVantage.
+
+    Returns:
+        dict: Словарь {тикер: цена}.
+    """
+    base_url = "https://www.alphavantage.co/query"
+    prices: Dict[str, float] = {}
+    for ticker in tickers:
+        params = {
+            "function": "GLOBAL_QUOTE",
+            "symbol": ticker,
+            "apikey": api_key
+        }
+        try:
+            resp = requests.get(base_url, params=params, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+            price = float(data["Global Quote"]["05. price"])
+        except Exception:
+            price = 0.0
+        prices[ticker] = round(price, 2)
+    return prices
+
+
+def get_user_settings(path: Optional[str] = None) -> Dict[str, Any]:
+    """Загружает пользовательские настройки из JSON.
+
+    Args:
+        path (str, optional): Путь к файлу настроек. По умолчанию берётся BASE_DIR/user_settings.json.
+
+    Returns:
+        dict: Словарь с настройками.
+
+    Raises:
+        FileNotFoundError: Если файл не найден.
+    """
     if path is None:
         path = os.path.join(BASE_DIR, "user_settings.json")
     if not os.path.exists(path):
@@ -193,83 +229,43 @@ def get_user_settings(path=None):
     with open(path, encoding='utf-8') as f:
         return json.load(f)
 
-def get_main_page(date_str: str):
+
+def get_main_page(date_str: str, stock_api_key: str) -> Dict[str, Any]:
+    """Формирует данные для главной страницы:
+    приветствие, карты, транзакции, валюты и акции.
+
+    Args:
+        date_str (str): Дата в формате "%Y-%m-%d %H:%M:%S".
+        stock_api_key (str): API-ключ AlphaVantage.
+
+    Returns:
+        dict: Данные для отображения на главной странице.
+    """
     date = parse_date(date_str)
     start_date, end_date = get_date_range(date, 'M')
 
     greeting = get_greeting(date)
     user_settings = get_user_settings()
     df = load_operations()
-    # Здесь предполагаем, что операции хранятся в Excel
+
     cards_info = analyze_cards(df, start_date, end_date)
     top_transactions = get_top_transactions(df, start_date, end_date)
-    currencies, stocks = get_financial_data(user_settings["user_currencies"], user_settings["user_stocks"])
+
+    currency_rates = get_currency_rates(
+        user_settings["user_currencies"],
+        base=user_settings.get("base_currency", "RUB"),
+        access_key=user_settings.get("currency_api_key")
+    )
+    stock_prices = get_stock_prices(user_settings["user_stocks"], api_key=stock_api_key)
 
     return {
         "greeting": greeting,
         "cards": cards_info,
         "top_transactions": top_transactions,
-        "currencies": currencies,
-        "stocks": stocks
+        "currency_rates": [
+            {"currency": c, "rate": rate} for c, rate in currency_rates.items()
+        ],
+        "stock_prices": [
+            {"stock": s, "price": price} for s, price in stock_prices.items()
+        ]
     }
-
-
-def get_events_page(date_str: str, range_type: str = "M"):
-    date = parse_date(date_str)
-    start_date, end_date = get_date_range(date, range_type)
-    user_settings = get_user_settings()
-
-    df = load_operations()
-
-    expenses = analyze_expenses(df, start_date, end_date)
-    incomes = analyze_incomes(df, start_date, end_date)
-
-    currencies = {cur: 0.0 for cur in user_settings["user_currencies"]}
-    stocks = {stock: 0.0 for stock in user_settings["user_stocks"]}
-
-    return {
-        "expenses": expenses,
-        "incomes": incomes,
-        "currencies": currencies,
-        "stocks": stocks
-    }
-
-
-def get_currency_rates(currencies, base="RUB", access_key= "fKCxXBg8fAPezuC0GlMI64lVbA4XloSU"):
-    url = "https://api.apilayer.com/exchangerates_data/latest"
-    headers = {"apikey": access_key}
-    params = {
-        "base": base,
-        "symbols": ",".join(currencies)
-    }
-    try:
-        resp = requests.get(url, headers=headers, params=params, timeout=60)
-        resp.raise_for_status()
-        data = resp.json()
-        if not data.get("success", False):
-            raise ValueError(data.get("error", {}).get("info", "Unknown error"))
-        return {cur: round(data["rates"].get(cur, 0), 4) for cur in currencies}
-    except Exception as e:
-        print(f"[Currency API error] {e}")
-        return {cur: 0.0 for cur in currencies}
-
-
-def get_stock_prices(tickers: list, access_key="fKCxXBg8fAPezuC0GlMI64lVbA4XloSU"):
-    url = "https://api.apilayer.com/stocks/latest"
-    headers = {"apikey": access_key}
-    params = {"symbols": ",".join(tickers)}
-
-    try:
-        resp = requests.get(url, headers=headers, params=params, timeout=60)
-        resp.raise_for_status()
-        data = resp.json()
-        if not data.get("success", False):
-            raise ValueError(data.get("error", {}).get("info", "Unknown error"))
-
-        # Предположим, что структура данных в API apilayer.com схожа с валютным API
-        return {ticker: round(data["data"].get(ticker, {}).get("price", 0), 2) for ticker in tickers}
-    except Exception as e:
-        print(f"[Stock API error] {e}")
-        return {ticker: 0.0 for ticker in tickers}
-
-
