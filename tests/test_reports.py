@@ -1,53 +1,78 @@
+import os
+import glob
+import json
 import pandas as pd
-from datetime import datetime
-
 import pytest
+from src import reports
 
-from src.reports import analyze_cards, get_top_transactions, analyze_expenses, analyze_incomes
 
 @pytest.fixture
-def sample_df():
+def sample_data():
+    """Фикстура с тестовыми транзакциями."""
     data = {
-        "date": pd.to_datetime(["2025-08-01", "2025-08-10", "2025-08-12"]),
-        "card_number": ["1111222233334444", "1111222233335555", "1111222233334444"],
-        "amount": [-1000.0, 2000.0, -500.0],
-        "cashback": [10.0, 20.0, 5.0],
-        "category": ["Продукты", "Зарплата", "Наличные"],
-        "description": ["Покупка в магазине", "Зарплата", "Снятие наличных"],
-        "card_last4": ["4444", "5555", "4444"]
+        "Дата операции": pd.to_datetime([
+            "2024-05-01", "2024-05-03", "2024-05-05",
+            "2024-06-10", "2024-06-12", "2024-07-01",
+        ]),
+        "Категория": [
+            "Продукты", "Кафе", "Продукты",
+            "Транспорт", "Продукты", "Кафе",
+        ],
+        "Сумма операции": [1000, 500, 1500, 200, 800, 700],
     }
     return pd.DataFrame(data)
 
-def test_analyze_cards(sample_df):
-    start = datetime(2025, 8, 1)
-    end = datetime(2025, 8, 12)
-    result = analyze_cards(sample_df, start, end)
-    assert isinstance(result, list)
-    assert len(result) == 2
-    for card in result:
-        assert "card_last4" in card
-        assert "total_spent" in card
-        assert "cashback" in card
 
-def test_get_top_transactions(sample_df):
-    start = datetime(2025, 8, 1)
-    end = datetime(2025, 8, 12)
-    result = get_top_transactions(sample_df, start, end)
-    assert isinstance(result, list)
-    assert len(result) <= 5
-    assert all("amount" in tx for tx in result)
+def find_report_file(func_name: str) -> str:
+    """Находит последний созданный отчёт по имени функции."""
+    files = glob.glob(f"report_{func_name}_*.json")
+    assert files, f"Файл для {func_name} не найден"
+    return max(files, key=os.path.getctime)
 
-def test_analyze_expenses(sample_df):
-    start = datetime(2025, 8, 1)
-    end = datetime(2025, 8, 12)
-    result = analyze_expenses(start, end, sample_df)
-    assert "total" in result
-    assert "main" in result
-    assert "cash_and_transfers" in result
 
-def test_analyze_incomes(sample_df):
-    start = datetime(2025, 8, 1)
-    end = datetime(2025, 8, 12)
-    result = analyze_incomes(start, end, sample_df)
-    assert "total" in result
-    assert "main" in result
+def read_json_file(file_path: str) -> list:
+    """Чтение JSON-файла и возврат содержимого."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def test_spending_by_category_creates_file(sample_data):
+    """Проверка трат по категории и создания JSON-файла."""
+    result = reports.spending_by_category(sample_data, "Продукты", date="2024-07-10")
+
+    assert isinstance(result, pd.DataFrame)
+    assert not result.empty
+    assert "Категория" in result.columns
+
+    file_path = find_report_file("spending_by_category")
+    content = read_json_file(file_path)
+    assert isinstance(content, list)
+    assert len(content) > 0
+
+
+def test_spending_by_weekday_creates_file(sample_data):
+    """Проверка трат по дням недели и создания JSON-файла."""
+    result = reports.spending_by_weekday(sample_data, date="2024-07-10")
+
+    assert isinstance(result, pd.DataFrame)
+    assert not result.empty
+    assert "weekday" in result.columns
+
+    file_path = find_report_file("spending_by_weekday")
+    content = read_json_file(file_path)
+    assert isinstance(content, list)
+    assert len(content) > 0
+
+
+def test_spending_by_workday_creates_file(sample_data):
+    """Проверка трат по рабочим/выходным дням и создания JSON-файла."""
+    result = reports.spending_by_workday(sample_data, date="2024-07-10")
+
+    assert isinstance(result, pd.DataFrame)
+    assert not result.empty
+    assert "Тип дня" in result.columns  # фикс: проверяем реальное имя столбца
+
+    file_path = find_report_file("spending_by_workday")
+    content = read_json_file(file_path)
+    assert isinstance(content, list)
+    assert len(content) > 0
