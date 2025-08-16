@@ -8,34 +8,67 @@ import pandas as pd
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def _to_json(df: pd.DataFrame) -> str:
+    """
+    Конвертирует DataFrame в JSON, приводя все даты к строкам.
+    """
+    df_copy = df.copy()
+
+    for col in df_copy.columns:
+        if pd.api.types.is_datetime64_any_dtype(df_copy[col]):
+            df_copy[col] = df_copy[col].astype(str)
+
+    return df_copy.to_json(orient="records", force_ascii=False, indent=4)
 
 def cashback_analysis(data: pd.DataFrame, year: int, month: int) -> str:
     """
-    Анализ выгодных категорий повышенного кешбэка за конкретный месяц.
+    Анализ выгодности категорий повышенного кешбэка.
 
-    :param data: DataFrame с транзакциями
-    :param year: год анализа
-    :param month: месяц анализа
-    :return: JSON-строка с категориями и суммой начисленного кешбэка
+    Args:
+        data (pd.DataFrame): Данные с транзакциями (из Excel).
+        year (int): Год для анализа.
+        month (int): Месяц для анализа.
+
+    Returns:
+        str: JSON с анализом, сколько можно заработать кешбэка в каждой категории.
+             Формат:
+             {
+                 "Категория 1": 1000.0,
+                 "Категория 2": 2000.0
+             }
     """
-    logger.info(f"Анализ кешбэка за {year}-{month:02d}")
+    try:
+        # Преобразуем даты в корректный формат (день.месяц.год часы:минуты:секунды)
+        data["Дата операции"] = pd.to_datetime(
+            data["Дата операции"],
+            format="%d.%m.%Y %H:%M:%S",
+            errors="coerce"
+        )
 
-    # фильтрация по дате
-    data["Дата операции"] = pd.to_datetime(data["Дата операции"], errors="coerce")
-    df_filtered = data[
-        (data["Дата операции"].dt.year == year)
-        & (data["Дата операции"].dt.month == month)
-    ]
+        # Фильтруем по указанному году и месяцу
+        filtered = data[
+            (data["Дата операции"].dt.year == year) &
+            (data["Дата операции"].dt.month == month)
+        ]
 
-    # группировка по категориям
-    result = (
-        df_filtered.groupby("Категория")["Бонусы (включая кэшбэк)"]
-        .sum()
-        .astype(int)
-        .to_dict()
-    )
+        if filtered.empty:
+            logger.warning(f"Нет данных за {year}-{month:02d}")
+            return json.dumps({}, ensure_ascii=False, indent=4)
 
-    return json.dumps(result, ensure_ascii=False, indent=4)
+        # Группируем по категории и суммируем кешбэк
+        result = (
+            filtered.groupby("Категория")
+            ["Бонусы (включая кэшбэк)"]
+            .sum()
+            .to_dict()
+        )
+
+        logger.info(f"Анализ кешбэка за {year}-{month:02d} выполнен успешно")
+        return json.dumps(result, ensure_ascii=False, indent=4)
+
+    except Exception as e:
+        logger.error(f"Ошибка при анализе кешбэка: {e}")
+        raise
 
 
 def investment_bank(month: str, transactions: pd.DataFrame, limit: int) -> float:
@@ -69,48 +102,35 @@ def investment_bank(month: str, transactions: pd.DataFrame, limit: int) -> float
 
 def simple_search(query: str, data: pd.DataFrame) -> str:
     """
-    Простой поиск по описанию и категории.
-
-    :param query: строка для поиска
-    :param data: DataFrame с транзакциями
-    :return: JSON со всеми транзакциями, где найдено совпадение
+    Поиск по описанию или категории.
     """
-    logger.info(f"Поиск по строке: {query}")
-
     mask = data["Описание"].str.contains(query, case=False, na=False) | \
            data["Категория"].str.contains(query, case=False, na=False)
-
-    result = data[mask].to_dict(orient="records")
-    return json.dumps(result, ensure_ascii=False, indent=4)
+    return _to_json(data[mask])
 
 
 def search_phone_numbers(data: pd.DataFrame) -> str:
     """
-    Поиск транзакций с мобильными номерами в описании.
+    Поиск транзакций, содержащих телефонные номера в описании.
 
-    :param data: DataFrame с транзакциями
-    :return: JSON со всеми транзакциями с номерами
+    Аргументы:
+        data: DataFrame с транзакциями.
+
+    Возвращает:
+        JSON-строку с транзакциями, где найдены телефонные номера.
     """
-    logger.info("Поиск номеров телефонов")
-
-    phone_pattern = re.compile(r"\+7\s?\d{3}[\s-]?\d{2,3}[\s-]?\d{2}[\s-]?\d{2}")
-
-    mask = data["Описание"].str.contains(phone_pattern, na=False)
-    result = data[mask].to_dict(orient="records")
-    return json.dumps(result, ensure_ascii=False, indent=4)
+    phone_pattern = r"\+7\s?\d{3}\s?\d{2,3}-?\d{2}-?\d{2}"
+    mask = data["Описание"].str.contains(phone_pattern, regex=True, na=False)
+    result = data[mask]
+    return _to_json(result)
 
 
 def search_person_transfers(data: pd.DataFrame) -> str:
     """
-    Поиск переводов физическим лицам (категория 'Переводы' + имя и инициал).
-
-    :param data: DataFrame с транзакциями
-    :return: JSON со всеми переводами физлицам
+    Поиск переводов физическим лицам (категория 'Переводы',
+    описание содержит имя и инициал).
     """
-    logger.info("Поиск переводов физическим лицам")
-
-    pattern = re.compile(r"[А-ЯЁ][а-яё]+ [А-ЯЁ]\.")
-    mask = (data["Категория"] == "Переводы") & data["Описание"].str.contains(pattern, na=False)
-
-    result = data[mask].to_dict(orient="records")
-    return json.dumps(result, ensure_ascii=False, indent=4)
+    person_pattern = re.compile(r"[А-ЯЁ][а-яё]+ [А-Я]\.")
+    mask = (data["Категория"] == "Переводы") & \
+           data["Описание"].str.contains(person_pattern, na=False)
+    return _to_json(data[mask])
