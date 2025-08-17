@@ -1,12 +1,10 @@
 import json
 import logging
+
 import pandas as pd
 
-from src.views import get_main_page, get_events_page
-from src.settings import (
-    OPERATIONS_FILE,
-    LOG_LEVEL,
-)
+from src.settings import LOG_LEVEL
+from src.views import get_events_page, get_main_page
 
 # Логирование
 logging.basicConfig(
@@ -34,6 +32,16 @@ if __name__ == "__main__":
     print("=== Главная ===")
     print(json.dumps(result_main, ensure_ascii=False, indent=2))
 
-    result_events = get_events_page("2021-12-21 10:00:00")
+    df = pd.DataFrame(
+        [
+            {
+                "Дата операции": "2021-12-21 10:00:00",
+                "Сумма операции": -100,
+                "Категория": "Еда",
+                "Описание": "Обед",
+            }
+        ]
+    )
+    result_events = get_events_page(df)
     print("=== События ===")
     print(json.dumps(result_events, ensure_ascii=False, indent=2))

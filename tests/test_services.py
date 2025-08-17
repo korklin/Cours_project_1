@@ -1,7 +1,9 @@
-import pathlib
 import json
+import pathlib
+
 import pandas as pd
 import pytest
+
 from src import services
 from src.utils import normalize_transactions
 
@@ -39,8 +41,11 @@ def test_simple_search(data):
 
     assert isinstance(result, str)
     assert isinstance(parsed, list)
-    assert any("Супермаркет" in tx.get("Описание", "") or "Супермаркет" in tx.get("Категория", "")
-               for tx in parsed)
+    assert any(
+        "Супермаркет" in tx.get("Описание", "")
+        or "Супермаркет" in tx.get("Категория", "")
+        for tx in parsed
+    )
 
 
 def test_search_phone_numbers(data):
@@ -57,5 +62,8 @@ def test_search_person_transfers(data):
 
     assert isinstance(result, str)
     assert isinstance(parsed, list)
-    assert all("Перевод" in tx.get("Категория", "") or "перевод" in tx.get("Описание", "").lower()
-               for tx in parsed)
+    assert all(
+        "Перевод" in tx.get("Категория", "")
+        or "перевод" in tx.get("Описание", "").lower()
+        for tx in parsed
+    )

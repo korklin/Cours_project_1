@@ -1,7 +1,9 @@
-import pathlib
 import json
+import pathlib
+
 import pandas as pd
 import pytest
+
 from src import reports
 from src.utils import normalize_transactions
 

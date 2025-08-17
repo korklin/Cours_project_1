@@ -1,11 +1,10 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import pandas as pd
-from typing import List, Dict, Any
-
 
 logger = logging.getLogger(__name__)
+
 
 def load_transactions(filepath: str) -> pd.DataFrame:
     """
@@ -19,6 +18,7 @@ def load_transactions(filepath: str) -> pd.DataFrame:
         logger.error(f"Ошибка при загрузке файла {filepath}: {e}")
         return pd.DataFrame()
 
+
 def normalize_transactions(df: pd.DataFrame) -> pd.DataFrame:
     """
     Нормализует данные из Excel: проверяет наличие нужных колонок,
@@ -30,8 +30,12 @@ def normalize_transactions(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = None
 
     # Приведение типов
-    df["Дата операции"] = pd.to_datetime(df["Дата операции"], errors="coerce", dayfirst=True)
-    df["Сумма операции"] = pd.to_numeric(df["Сумма операции"], errors="coerce").fillna(0.0)
+    df["Дата операции"] = pd.to_datetime(
+        df["Дата операции"], errors="coerce", dayfirst=True
+    )
+    df["Сумма операции"] = pd.to_numeric(df["Сумма операции"], errors="coerce").fillna(
+        0.0
+    )
 
     # Заполнение пропусков
     df["Категория"] = df["Категория"].fillna("Неизвестно")
@@ -65,10 +69,14 @@ def prepare_events(df: pd.DataFrame) -> list[dict]:
         elif isinstance(raw_date, pd.Timestamp):
             parsed_date = raw_date.to_pydatetime()
 
-        events.append({
-            "дата": parsed_date.strftime("%d.%m.%Y %H:%M:%S") if parsed_date else "",
-            "сумма": row["Сумма операции"],
-            "категория": row["Категория"],
-            "описание": row["Описание"],
-        })
+        events.append(
+            {
+                "дата": (
+                    parsed_date.strftime("%d.%m.%Y %H:%M:%S") if parsed_date else ""
+                ),
+                "сумма": row["Сумма операции"],
+                "категория": row["Категория"],
+                "описание": row["Описание"],
+            }
+        )
     return events

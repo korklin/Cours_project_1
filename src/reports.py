@@ -1,12 +1,14 @@
-import os
 import json
+import os
+
 import pandas as pd
-from typing import Dict, Any
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def spending_by_category(df: pd.DataFrame, month: str, output_file: str = "report_by_category.json") -> str:
+def spending_by_category(
+    df: pd.DataFrame, month: str, output_file: str = "report_by_category.json"
+) -> str:
     """
     Считает расходы по категориям за указанный месяц.
     month: '2021-12'
@@ -31,7 +33,9 @@ def spending_by_category(df: pd.DataFrame, month: str, output_file: str = "repor
     return path
 
 
-def spending_by_weekday(df: pd.DataFrame, output_file: str = "report_by_weekday.json") -> str:
+def spending_by_weekday(
+    df: pd.DataFrame, output_file: str = "report_by_weekday.json"
+) -> str:
     """
     Считает средние расходы по дням недели.
     """
@@ -54,12 +58,16 @@ def spending_by_weekday(df: pd.DataFrame, output_file: str = "report_by_weekday.
     return path
 
 
-def spending_by_workday(df: pd.DataFrame, output_file: str = "report_by_workday.json") -> str:
+def spending_by_workday(
+    df: pd.DataFrame, output_file: str = "report_by_workday.json"
+) -> str:
     """
     Считает расходы в будни и выходные.
     """
     df = df.copy()
-    df["Тип дня"] = df["Дата операции"].dt.weekday.apply(lambda x: "Будни" if x < 5 else "Выходные")
+    df["Тип дня"] = df["Дата операции"].dt.weekday.apply(
+        lambda x: "Будни" if x < 5 else "Выходные"
+    )
 
     report = (
         df.groupby("Тип дня")["Сумма операции"]

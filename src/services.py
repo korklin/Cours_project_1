@@ -1,7 +1,6 @@
 import json
+
 import pandas as pd
-import re
-from typing import Dict, List, Any
 
 
 def cashback_analysis(df: pd.DataFrame, year: int, month: int) -> str:
@@ -9,7 +8,9 @@ def cashback_analysis(df: pd.DataFrame, year: int, month: int) -> str:
     Анализ выгодных категорий кешбэка.
     """
     df = df.copy()
-    df = df[(df["Дата операции"].dt.year == year) & (df["Дата операции"].dt.month == month)]
+    df = df[
+        (df["Дата операции"].dt.year == year) & (df["Дата операции"].dt.month == month)
+    ]
 
     grouped = df.groupby("Категория")["Кэшбэк"].sum().reset_index()
     result = {row["Категория"]: float(row["Кэшбэк"]) for _, row in grouped.iterrows()}
@@ -47,7 +48,9 @@ def search_phone_numbers(df: pd.DataFrame) -> str:
     """
     Поиск операций с телефонными номерами.
     """
-    mask = df["Описание"].str.contains(r"\+7\d{10}", na=False) | df["Описание"].str.contains(r"8\d{10}", na=False)
+    mask = df["Описание"].str.contains(r"\+7\d{10}", na=False) | df[
+        "Описание"
+    ].str.contains(r"8\d{10}", na=False)
     result = df[mask]
     return result.to_json(orient="records", force_ascii=False)
 
@@ -56,6 +59,8 @@ def search_person_transfers(df: pd.DataFrame) -> str:
     """
     Поиск переводов физическим лицам.
     """
-    mask = df["Категория"].str.contains("Перевод", na=False) | df["Описание"].str.contains("перевод", case=False, na=False)
+    mask = df["Категория"].str.contains("Перевод", na=False) | df[
+        "Описание"
+    ].str.contains("перевод", case=False, na=False)
     result = df[mask]
     return result.to_json(orient="records", force_ascii=False)

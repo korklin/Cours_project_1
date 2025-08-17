@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,7 +33,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE, encoding="utf-8"),  # Лог в файл
-        ]
+    ],
 )
 
 logger = logging.getLogger(__name__)
