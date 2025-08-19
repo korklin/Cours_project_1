@@ -45,11 +45,11 @@ pip install -r requirements.txt
 ```
 5. Запустите приложение:
 ```bash
-python src/main.py
+python main.py
 ```
 ## Основные файлы
 
-- src/main.py
+- main.py
 Точка входа. Отсюда запускаются функции для отображения страниц.
 
 - src/views.py
@@ -93,7 +93,8 @@ pytest
 ```
 
 ## Информация о покрытии кода тестами:
-![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+![img_3.png](img_3.png)
 
 ## Документация:
 

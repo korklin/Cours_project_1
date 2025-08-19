@@ -2,7 +2,6 @@ import json
 
 import pandas as pd
 
-from src.utils import prepare_events
 from src.views import get_events_page, get_main_page
 
 
