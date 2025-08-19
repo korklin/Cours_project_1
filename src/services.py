@@ -35,12 +35,19 @@ def investment_bank(month: str, df: pd.DataFrame, round_to: int = 100) -> float:
 
 def simple_search(query: str, df: pd.DataFrame) -> str:
     """
-    Поиск по описанию или категории.
+    Поиск по описанию или категории с приведением дат.
     """
+    # Нормализуем даты
+    df["Дата операции"] = pd.to_datetime(
+        df["Дата операции"], dayfirst=False, errors="coerce", format="%Y-%m-%d %H:%M:%S"
+    )
+
+    # Фильтруем по запросу
     result = df[
         df["Описание"].str.contains(query, case=False, na=False)
         | df["Категория"].str.contains(query, case=False, na=False)
     ]
+
     return result.to_json(orient="records", force_ascii=False)
 
 
