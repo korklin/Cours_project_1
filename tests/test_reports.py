@@ -1,6 +1,6 @@
 import json
 import pathlib
-from typing import Any, Callable, TextIO
+from typing import Any, Callable, IO
 
 import pandas as pd
 import pytest
@@ -70,13 +70,9 @@ def test_reports_generate_files(
 def test_reports_with_mock(monkeypatch: pytest.MonkeyPatch, data: pd.DataFrame, tmp_path: pathlib.Path) -> None:
     called = {}
 
-    def mock_dump(
-        obj: Any,
-        _fp: TextIO,
-        _ensure_ascii: bool = False,
-        _indent: int = 4,
-    ) -> None:
+    def mock_dump(obj: Any, _fp: IO[str], *args: Any, **kwargs: Any) -> None:
         called["dumped"] = obj
+        return None
 
     monkeypatch.setattr(json, "dump", mock_dump)
 

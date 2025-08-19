@@ -72,10 +72,10 @@ def test_get_events_page_returns_dict() -> None:
         def iterrows(self) -> Iterator[tuple[Hashable, Series]]:
             yield 0, Series(
                 {
-                    "Дата операции": "2021-12-21 10:00:00",
-                    "Сумма операции": 100,
-                    "Категория": "Тест",
-                    "Описание": "Dummy event",
+                    "Дата операции": "21.12.2021 10:00:00",
+                    "Сумма операции": 123.45,
+                    "Категория": "Тестовая категория",
+                    "Описание": "Test Event",
                 }
             )
 
