@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1d429e80-6033-4260-bfbc-aea4df23d829" name="Changes" comment="моки и параметризация в тесты">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tree_root.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_reports.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_reports.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_views.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="develop" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;korklin&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/korklin/Cours_project_1.git&quot;,
+    &quot;accountId&quot;: &quot;b561965c-30a4-4922-9f22-eb7f50b571c7&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="30wUNAWzNvASBJdTN9QP2E6AMHr" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python tests.Python tests for test_views.test_get_events_page_returns_dict.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.tree_root.executor": "Run",
+    "Python.views.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "feature__1",
+    "last_opened_file_path": "C:/Users/aleks/PycharmProjects/PythonProject",
+    "settings.editor.selected.configurable": "configurable.group.project"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\aleks\PycharmProjects\PythonProject" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python tests.Python tests for test_views.test_get_events_page_returns_dict">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Cours_project_1" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\aleks\PycharmProjects\PythonProject\main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tree_root" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Cours_project_1" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tree_root.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for test_views.test_get_events_page_returns_dict" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="Cours_project_1" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_views.test_get_events_page_returns_dict&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.Python tests for test_views.test_get_events_page_returns_dict" />
+        <item itemvalue="Python.tree_root" />
+        <item itemvalue="Python.main" />
+        <item itemvalue="Python.tree_root" />
+        <item itemvalue="Python.main" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-dfff61a61320-9cdd278e9d02-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.25410.159" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration>C:\Users\aleks\AppData\Roaming\Subversion</configuration>
+    <option name="sshConnectionType" value="PASSWORD" />
+    <option name="sshExecutablePath" value="git@github.com:korklin/-_1.git" />
+    <option name="sshUserName" value="korklin" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1d429e80-6033-4260-bfbc-aea4df23d829" name="Changes" comment="" />
+      <created>1754538085902</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1754538085902</updated>
+    </task>
+    <task id="LOCAL-00001" summary="структура проекта и зависимости">
+      <option name="closed" value="true" />
+      <created>1754558165693</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1754558165693</updated>
+    </task>
+    <task id="LOCAL-00002" summary="блок src">
+      <option name="closed" value="true" />
+      <created>1754990049453</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1754990049453</updated>
+    </task>
+    <task id="LOCAL-00003" summary="блок src настроен и работает, настроен API">
+      <option name="closed" value="true" />
+      <created>1754999799244</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1754999799244</updated>
+    </task>
+    <task id="LOCAL-00004" summary="test_report.py, test_utils.py">
+      <option name="closed" value="true" />
+      <created>1755072102593</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1755072102593</updated>
+    </task>
+    <task id="LOCAL-00005" summary="test_services.py">
+      <option name="closed" value="true" />
+      <created>1755072158100</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1755072158100</updated>
+    </task>
+    <task id="LOCAL-00006" summary="test_views.py">
+      <option name="closed" value="true" />
+      <created>1755072197421</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1755072197421</updated>
+    </task>
+    <task id="LOCAL-00007" summary="исправленная структура задания">
+      <option name="closed" value="true" />
+      <created>1755078372762</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1755078372762</updated>
+    </task>
+    <task id="LOCAL-00008" summary="доработан views.py, user_settings.json, main.py">
+      <option name="closed" value="true" />
+      <created>1755323140328</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1755323140328</updated>
+    </task>
+    <task id="LOCAL-00009" summary="написаны тесты для test_views.py">
+      <option name="closed" value="true" />
+      <created>1755323734616</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1755323734616</updated>
+    </task>
+    <task id="LOCAL-00010" summary="services.py">
+      <option name="closed" value="true" />
+      <created>1755324614917</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1755324614917</updated>
+    </task>
+    <task id="LOCAL-00011" summary="services.py, test_services.py">
+      <option name="closed" value="true" />
+      <created>1755326733807</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1755326733807</updated>
+    </task>
+    <task id="LOCAL-00012" summary="reports.py">
+      <option name="closed" value="true" />
+      <created>1755326949587</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1755326949587</updated>
+    </task>
+    <task id="LOCAL-00013" summary="test_reports.py">
+      <option name="closed" value="true" />
+      <created>1755327229193</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1755327229193</updated>
+    </task>
+    <task id="LOCAL-00014" summary="доработки по всем тестам и модулям src">
+      <option name="closed" value="true" />
+      <created>1755365681892</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1755365681892</updated>
+    </task>
+    <task id="LOCAL-00015" summary="доработки по всем тестам и модулям после проверок mypy, pytest и прочее. Добавлен отчет о покрытии тестами">
+      <option name="closed" value="true" />
+      <created>1755416501009</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1755416501009</updated>
+    </task>
+    <task id="LOCAL-00016" summary="README.md">
+      <option name="closed" value="true" />
+      <created>1755419312955</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1755419312955</updated>
+    </task>
+    <task id="LOCAL-00017" summary="правки в README.md и по расположению main.py">
+      <option name="closed" value="true" />
+      <created>1755606356402</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1755606356402</updated>
+    </task>
+    <task id="LOCAL-00018" summary="правки в README.md">
+      <option name="closed" value="true" />
+      <created>1755606499616</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1755606499616</updated>
+    </task>
+    <task id="LOCAL-00019" summary="моки и параметризация в тесты">
+      <option name="closed" value="true" />
+      <created>1755619912707</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1755619912707</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="feature_1" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="структура проекта и зависимости" />
+    <MESSAGE value="блок src" />
+    <MESSAGE value="блок src настроен и работает, настроен API" />
+    <MESSAGE value="test_report.py, test_utils.py" />
+    <MESSAGE value="test_services.py" />
+    <MESSAGE value="test_views.py" />
+    <MESSAGE value="исправленная структура задания" />
+    <MESSAGE value="доработан views.py, user_settings.json, main.py" />
+    <MESSAGE value="написаны тесты для test_views.py" />
+    <MESSAGE value="services.py" />
+    <MESSAGE value="services.py, test_services.py" />
+    <MESSAGE value="reports.py" />
+    <MESSAGE value="test_reports.py" />
+    <MESSAGE value="доработки по всем тестам и модулям src" />
+    <MESSAGE value="доработки по всем тестам и модулям после проверок mypy, pytest и прочее. Добавлен отчет о покрытии тестами" />
+    <MESSAGE value="README.md" />
+    <MESSAGE value="правки в README.md и по расположению main.py" />
+    <MESSAGE value="правки в README.md" />
+    <MESSAGE value="моки и параметризация в тесты" />
+    <option name="LAST_COMMIT_MESSAGE" value="моки и параметризация в тесты" />
+  </component>
+</project>

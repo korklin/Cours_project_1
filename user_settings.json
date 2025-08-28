@@ -1,0 +1,6 @@
+{
+  "user_currencies": ["USD", "EUR"],
+  "user_stocks": ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"],
+  "base_currency": "RUB",
+  "currency_api_key": "fKCxXBg8fAPezuC0GlMI64lVbA4XloSU"
+}
